@@ -9,7 +9,7 @@ pub fn setup_ground(
 ) {
     commands.spawn((
         SceneComponent,
-        Mesh3d(meshes.add(Cuboid::new(10000.0, 10.0, 10000.0))),
+        Mesh3d(meshes.add(Cuboid::new(10000.0, 0.01, 10000.0))),
         MeshMaterial3d(materials.add(Color::srgb_u8(156, 107, 3))),
         Transform::from_xyz(0.0, 0.0, 0.0),
     ));

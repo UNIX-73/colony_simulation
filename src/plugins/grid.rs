@@ -1,11 +1,13 @@
 use bevy::prelude::*;
 
-use crate::systems::grid::movement::set_grid_transforms;
-
+use crate::systems::grid::position::{set_grid_fractional_transforms, set_grid_transforms};
 
 pub struct GridPlugin;
 impl Plugin for GridPlugin {
-	fn build(&self, app: &mut App) {
-		app.add_systems( PostUpdate, set_grid_transforms);
-	}
+    fn build(&self, app: &mut App) {
+        app.add_systems(
+            PostUpdate,
+            (set_grid_transforms, set_grid_fractional_transforms),
+        );
+    }
 }

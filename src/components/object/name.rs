@@ -1,13 +1,11 @@
 use bevy::prelude::*;
 
 #[derive(Component)]
-pub struct ObjectName {
-    name: String,
+pub struct ObjectName<'a> {
+    name: &'a str,
 }
-impl Default for ObjectName {
+impl<'a> Default for ObjectName<'a> {
     fn default() -> Self {
-        Self {
-            name: "Unnamed".to_string(),
-        }
+        Self { name: "Unnamed" }
     }
 }

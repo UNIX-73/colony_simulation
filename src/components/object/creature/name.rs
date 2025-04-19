@@ -2,7 +2,7 @@ use bevy::prelude::*;
 
 #[derive(Component)]
 pub struct CreatureName {
-    name: String,
+   pub name: String,
 }
 impl Default for CreatureName {
     fn default() -> Self {
