@@ -5,9 +5,9 @@ pub mod modifiers;
 use atributes::CreatureAttributes;
 use base::CreatureBaseStats;
 use bevy::prelude::*;
-use modifiers::CreatureModifiers;
+use modifiers::{CreatureModifiers, StatModifier, definitions::HUMAN_MODIFIER};
 
-#[derive(Component)]
+#[derive(Component, Default)]
 #[require(CreatureBaseStats, CreatureModifiers, CreatureAttributes)]
 pub struct CreatureStats;
 
@@ -17,4 +17,14 @@ pub struct CreatureStatsBundle {
     pub modifiers: CreatureModifiers,
     pub attributes: CreatureAttributes,
     pub stats: CreatureStats,
+}
+impl CreatureStatsBundle {
+    pub fn human_bundle() -> Self {
+        CreatureStatsBundle {
+            base_stats: default(),
+            modifiers: CreatureModifiers(vec![StatModifier::new(&HUMAN_MODIFIER)]),
+            attributes: default(),
+            stats: default(),
+        }
+    }
 }

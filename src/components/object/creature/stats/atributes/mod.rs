@@ -1,102 +1,62 @@
+pub mod definitions;
+
 use bevy::prelude::*;
-use bitflags::bitflags;
+use definitions::AttributeType;
+use strum::IntoEnumIterator;
 
-// ===============================
-// Definición de Tags para atributos
-// ===============================
+use super::{base::CreatureBaseStats, modifiers::ModifierValues};
 
-bitflags! {
-    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-    pub struct AttributeTag: u32 {
-        const MOVEMENT = 0b00000001;
-        const COMBAT   = 0b00000010;
-        const WORK     = 0b00000100;
-        const SENSORY  = 0b00001000;
-        const MEDICINE = 0b00010000;
-        const MORALE   = 0b00100000;
-        // Puedes seguir añadiendo más si quieres...
-    }
+#[derive(Clone)]
+pub struct AttributeValue {
+    pub total_value: f32,
+    pub default_value: f32,
+    pub non_default_value: f32,
+    pub formula_value: f32, // Viene del cálculo de fórmula custom que tiene cada atributo
+    pub denied: bool,
 }
-
-// ===============================
-// Enum de todos los atributos posibles
-// ===============================
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum Attribute {
-    // Movimiento
-    WalkSpeed,
-    SprintSpeed,
-
-    // Combate
-    ShootingAccuracy,
-    MeleeAccuracy,
-    ReloadSpeed,
-
-    // Trabajo
-    MiningSpeed,
-    ConstructionSpeed,
-    HarvestingSpeed,
-
-    // Medicina
-    HealingSpeed,
-
-    // Sensorial
-    VisionRange,
-    HearingRange,
-
-    // Moral
-    MoraleRecovery,
-}
-
-// ===============================
-// Métodos asociados a Attribute
-// ===============================
-
-impl Attribute {
-    pub fn tags(&self) -> AttributeTag {
-        match self {
-            // Movimiento
-            Attribute::WalkSpeed | Attribute::SprintSpeed => AttributeTag::MOVEMENT,
-
-            // Combate
-            Attribute::ShootingAccuracy | Attribute::MeleeAccuracy | Attribute::ReloadSpeed => {
-                AttributeTag::COMBAT
-            }
-
-            // Trabajo
-            Attribute::MiningSpeed | Attribute::ConstructionSpeed | Attribute::HarvestingSpeed => {
-                AttributeTag::WORK
-            }
-
-            // Medicina
-            Attribute::HealingSpeed => AttributeTag::MEDICINE,
-
-            // Sensorial
-            Attribute::VisionRange | Attribute::HearingRange => AttributeTag::SENSORY,
-
-            // Moral
-            Attribute::MoraleRecovery => AttributeTag::MORALE,
+impl AttributeValue {
+    pub fn new(default_value: f32, non_default_value: f32, formula_value: f32, denied: bool) -> Self {
+        AttributeValue {
+            total_value: default_value + non_default_value + formula_value,
+            default_value,
+            non_default_value,
+            formula_value,
+            denied,
         }
     }
 }
+pub struct Attribute {
+    attribute_type: AttributeType,
+    value: AttributeValue,
+}
+impl Attribute {
+    pub fn get_type(&self) -> AttributeType {
+        self.attribute_type
+    }
+    pub fn get_value(&self) -> AttributeValue {
+        self.value.clone()
+    }
+    pub fn update_value(&mut self, base: &CreatureBaseStats, mods: &ModifierValues) {
+        self.value = self.attribute_type.resolve(base, mods);
+    }
+}
 
-// ===============================
-// Componente con los valores actuales de cada atributo
-// ===============================
-
-#[derive(Component, Debug, Default)]
+#[derive(Component, Default)]
 pub struct CreatureAttributes {
-    pub walk_speed: f32,
-    pub sprint_speed: f32,
-    pub shooting_accuracy: f32,
-    pub melee_accuracy: f32,
-    pub reload_speed: f32,
-    pub mining_speed: f32,
-    pub construction_speed: f32,
-    pub harvesting_speed: f32,
-    pub healing_speed: f32,
-    pub vision_range: f32,
-    pub hearing_range: f32,
-    pub morale_recovery: f32,
+    atributtes: Vec<Attribute>,
+}
+impl CreatureAttributes {
+    pub fn resolve_attributes(&mut self, base: &CreatureBaseStats, mods: &ModifierValues) {
+        self.atributtes = vec![];
+        for attribute in AttributeType::iter() {
+            let value = attribute.resolve(base, mods);
+
+            if value.total_value > 0.0 || value.denied {
+                self.atributtes.push(Attribute {
+                    attribute_type: attribute.clone(),
+                    value,
+                });
+            }
+        }
+    }
 }
