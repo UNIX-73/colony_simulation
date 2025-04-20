@@ -1,5 +1,7 @@
 pub mod definitions;
 
+use std::fmt::{self, Display, Formatter};
+
 use bevy::prelude::*;
 use definitions::AttributeType;
 use strum::IntoEnumIterator;
@@ -30,6 +32,19 @@ impl AttributeValue {
         }
     }
 }
+impl Display for AttributeValue {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "Total: {:.2}, Default: {:.2}, Non-default: {:.2}, Weighted: {:.2}, Denied: {}",
+            self.total_value,
+            self.default_value,
+            self.non_default_value,
+            self.weigthed_value,
+            self.denied
+        )
+    }
+}
 pub struct Attribute {
     attribute_type: AttributeType,
     value: AttributeValue,
@@ -51,6 +66,10 @@ pub struct CreatureAttributes {
     atributtes: Vec<Attribute>,
 }
 impl CreatureAttributes {
+    pub fn get(&self) -> &Vec<Attribute> {
+        &self.atributtes
+    }
+
     pub fn resolve_attributes(&mut self, base: &CreatureBaseStats, mods: &ModifierValues) {
         self.atributtes = vec![];
         for attribute in AttributeType::iter() {

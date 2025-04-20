@@ -1,4 +1,4 @@
-use strum_macros::EnumIter;
+use strum_macros::{Display, EnumIter};
 
 use crate::components::object::creature::stats::{
     base::{BaseStatType, CreatureBaseStats},
@@ -8,7 +8,7 @@ use crate::components::object::creature::stats::{
 use super::AttributeValue;
 
 /// 1️⃣ Define todos los atributos posibles
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, EnumIter)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, EnumIter, Display)]
 pub enum AttributeType {
     WalkSpeed,
     SprintSpeed,

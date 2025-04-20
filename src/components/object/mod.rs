@@ -4,8 +4,8 @@ pub mod name;
 use bevy::prelude::*;
 use name::ObjectName;
 
-use super::grid::grid_position::GridPosition;
+use super::grid::grid_position::GridPositionComponent;
 
 #[derive(Component, Default)]
-#[require(ObjectName, GridPosition)]
+#[require(ObjectName, GridPositionComponent)]
 pub struct Object;

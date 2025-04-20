@@ -2,10 +2,7 @@ use bevy::prelude::*;
 
 use crate::components::{
     camera::CameraComponent,
-    grid::{
-        grid_fractional_position::GridFractionalPosition, grid_height_offset::GridHeigthOffset,
-        grid_position::GridPosition,
-    },
+    grid::{GRID_SIZE, grid_height_offset::GridHeigthOffset, grid_position::GridPositionComponent},
 };
 
 pub fn setup_camera(mut commands: Commands) {
@@ -23,8 +20,7 @@ pub fn setup_camera(mut commands: Commands) {
                 0.0,                   // z
                 f32::sqrt(2.0) / 2.0,  // w
             )),
-        GridPosition { x: 0, y: 0 },
-        GridFractionalPosition { x: 0.0, y: 0.0 },
+        GridPositionComponent::new(0, 0),
         GridHeigthOffset::new(Some(18.0)),
     ));
 }
@@ -35,14 +31,14 @@ pub fn manual_camera_move(
     mut query: Query<
         (
             &mut CameraComponent,
-            &mut GridFractionalPosition,
+            &mut GridPositionComponent,
             &GridHeigthOffset,
             &mut Transform,
         ),
         With<CameraComponent>,
     >,
 ) {
-    if let Ok((camera, mut grid_frac_pos, grid_height_offset, mut transform)) =
+    if let Ok((camera, mut grid_pos_component, grid_height_offset, mut transform)) =
         query.get_single_mut()
     {
         let mut dir = Vec2::ZERO;
@@ -63,11 +59,11 @@ pub fn manual_camera_move(
 
         if dir != Vec2::ZERO {
             dir = dir.normalize();
-            // Aquí modificamos el sistema de grid fraccional, no el transform directamente
-            grid_frac_pos.x += dir.x * delta_s * camera.camera_speed;
-            grid_frac_pos.y += dir.y * delta_s * camera.camera_speed;
+            // Movemos la cámara usando el método encapsulado
+            grid_pos_component.move_in_grid(dir, camera.camera_speed, delta_s);
         }
 
+        // Actualizamos la rotación de la cámara
         if input.pressed(KeyCode::ArrowRight) {
             transform.rotate_y(-45f32.to_radians() * delta_s);
         }
@@ -75,9 +71,7 @@ pub fn manual_camera_move(
             transform.rotate_y(45f32.to_radians() * delta_s);
         }
 
-        // Actualizamos el Transform.position a partir de GridFractionalPosition
-        transform.translation.x = grid_frac_pos.x;
-        transform.translation.z = grid_frac_pos.y;
-        transform.translation.y = grid_height_offset.get_offset();
+        // Actualizamos la posición de la cámara
+        transform.translation = grid_pos_component.to_transform_translation(&grid_height_offset);
     }
 }

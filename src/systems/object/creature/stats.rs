@@ -49,6 +49,10 @@ pub fn resolve_creature_stats(
         base.resolve_base_stats(&mods);
         attributes.resolve_attributes(&base, &mods);
 
-        println!("Modifiers changed")
+        println!("Modifiers changed");
+
+        for attribute in attributes.get() {
+            println!("{} - {}", attribute.get_type(), attribute.get_value());
+        }
     }
 }
