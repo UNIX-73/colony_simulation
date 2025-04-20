@@ -6,7 +6,10 @@ mod systems;
 mod utils;
 
 use bevy::prelude::*;
-use plugins::{camera::CameraPlugin, grid::GridPlugin, scene::ScenePlugin};
+use plugins::{
+    camera::CameraPlugin, creature::stats::CreatureStatsPlugin, grid::GridPlugin,
+    scene::ScenePlugin,
+};
 use utils::test::TestingPlugin;
 
 fn main() {
@@ -17,6 +20,7 @@ fn main() {
         CameraPlugin,
         GridPlugin,
         TestingPlugin,
+        CreatureStatsPlugin,
     ));
 
     app.run();

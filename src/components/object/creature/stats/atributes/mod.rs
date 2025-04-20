@@ -11,16 +11,21 @@ pub struct AttributeValue {
     pub total_value: f32,
     pub default_value: f32,
     pub non_default_value: f32,
-    pub formula_value: f32, // Viene del cálculo de fórmula custom que tiene cada atributo
+    pub weigthed_value: f32, // Viene del cálculo de fórmula custom que tiene cada atributo
     pub denied: bool,
 }
 impl AttributeValue {
-    pub fn new(default_value: f32, non_default_value: f32, formula_value: f32, denied: bool) -> Self {
+    pub fn new(
+        default_value: f32,
+        non_default_value: f32,
+        weigthed_value: f32,
+        denied: bool,
+    ) -> Self {
         AttributeValue {
-            total_value: default_value + non_default_value + formula_value,
+            total_value: default_value + non_default_value + weigthed_value,
             default_value,
             non_default_value,
-            formula_value,
+            weigthed_value,
             denied,
         }
     }

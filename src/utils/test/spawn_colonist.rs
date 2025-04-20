@@ -5,7 +5,11 @@ use crate::components::{
         grid_fractional_position::GridFractionalPosition, grid_height_offset::GridHeigthOffset,
         grid_position::GridPosition,
     },
-    object::creature::{Creature, name::CreatureName},
+    object::creature::{
+        Creature,
+        name::CreatureName,
+        stats::{CreatureStats, modifiers::definitions::StatModifier},
+    },
 };
 
 use super::TestingComponent;
@@ -18,6 +22,7 @@ pub fn spawn_testing_colonist(
     commands.spawn((
         TestingComponent,
         Creature,
+        CreatureStats::new(&[StatModifier::Human]),
         CreatureName {
             name: "Testing creature".to_string(),
         },

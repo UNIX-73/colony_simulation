@@ -4,27 +4,38 @@ pub mod modifiers;
 
 use atributes::CreatureAttributes;
 use base::CreatureBaseStats;
-use bevy::prelude::*;
-use modifiers::{CreatureModifiers, StatModifier, definitions::HUMAN_MODIFIER};
+use bevy::prelude::* ;
+use modifiers::{CreatureModifiers, CreatureModifiersTimers, definitions::StatModifier};
+
+pub const MAX_STAT_VALUE: i32 = 250;
 
 #[derive(Component, Default)]
-#[require(CreatureBaseStats, CreatureModifiers, CreatureAttributes)]
+#[require(
+    CreatureBaseStats,
+    CreatureModifiers,
+    CreatureModifiersTimers,
+    CreatureAttributes
+)]
 pub struct CreatureStats;
+impl CreatureStats {
+    pub fn new(
+        modifiers: &[StatModifier],
+    ) -> (
+        Self,
+        CreatureBaseStats,
+        CreatureModifiers,
+        CreatureAttributes,
+        CreatureModifiersTimers,
+    ) {
+        let (modifiers, timers) = CreatureModifiers::new_with_timers(modifiers);
 
-#[derive(Bundle)]
-pub struct CreatureStatsBundle {
-    pub base_stats: CreatureBaseStats,
-    pub modifiers: CreatureModifiers,
-    pub attributes: CreatureAttributes,
-    pub stats: CreatureStats,
-}
-impl CreatureStatsBundle {
-    pub fn human_bundle() -> Self {
-        CreatureStatsBundle {
-            base_stats: default(),
-            modifiers: CreatureModifiers(vec![StatModifier::new(&HUMAN_MODIFIER)]),
-            attributes: default(),
-            stats: default(),
-        }
+        let mut base = CreatureBaseStats::default();
+        let mut attributes = CreatureAttributes::default();
+
+        let values = &modifiers.get_modifier_values();
+        base.resolve_base_stats(values);
+        attributes.resolve_attributes(&base, values);
+
+        (CreatureStats, base, modifiers, attributes, timers)
     }
 }

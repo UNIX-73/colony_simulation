@@ -3,6 +3,7 @@ pub mod definitions;
 use std::collections::{HashMap, HashSet};
 
 use bevy::prelude::*;
+use definitions::StatModifier;
 
 use super::{atributes::definitions::AttributeType, base::BaseStatType};
 
@@ -51,23 +52,6 @@ pub struct StatModifierDef {
     pub excludes: Option<&'static [StatModifierDef]>, // Excluye otros modifiers de poder aplicarse a un creature
 }
 
-// ===============================
-// Instancia activa de un modificador en una criatura
-// ===============================
-#[derive(Debug, Clone)]
-pub struct StatModifier {
-    pub def: &'static StatModifierDef, // Referencia a la definición base
-    pub remaining: Option<f64>,        // Tiempo restante (si temporal)
-}
-impl StatModifier {
-    pub fn new(definition: &'static StatModifierDef) -> Self {
-        StatModifier {
-            def: definition,
-            remaining: definition.default_duration,
-        }
-    }
-}
-
 pub struct StatTargetValues {
     pub default_values: Option<f32>,
     pub non_default_values: Option<f32>,
@@ -86,8 +70,58 @@ pub struct ModifierValues {
 // ===============================
 
 #[derive(Component, Debug, Default)]
+pub struct CreatureModifiersTimers(pub HashMap<StatModifier, f64>);
+
+#[derive(Component, Debug, Default)]
+#[require(CreatureModifiersTimers)]
 pub struct CreatureModifiers(pub Vec<StatModifier>);
 impl CreatureModifiers {
+	pub fn new_with_timers(modifiers: &[StatModifier]) -> (Self, CreatureModifiersTimers) {
+        let creature_modifiers = CreatureModifiers(modifiers.iter().cloned().collect());
+        
+        let mut timers = CreatureModifiersTimers::default();
+
+        for modifier in &creature_modifiers.0 {
+            if let Some(duration) = modifier.definition().default_duration {
+                timers.0.insert(modifier.clone(), duration);
+            }
+        }
+
+        (creature_modifiers, timers)
+    }
+
+    pub fn add_modifiers(
+        &mut self,
+        modifiers: &[StatModifier],
+        timers: &mut CreatureModifiersTimers,
+    ) {
+        for modifier in modifiers {
+            if !self.0.contains(&modifier) {
+                self.0.push(modifier.clone());
+
+                if let Some(duration) = modifier.definition().default_duration {
+                    timers.0.insert(modifier.clone(), duration);
+                }
+            }
+        }
+    }
+
+    pub fn remove_modifiers(
+        &mut self,
+        modifiers: &[StatModifier],
+        timers: &mut CreatureModifiersTimers,
+    ) {
+        let to_remove: HashSet<_> = modifiers.iter().cloned().collect();
+
+        // Borra del Vec
+        self.0.retain(|modifier| !to_remove.contains(modifier));
+
+        // Borra del HashMap
+        for modifier in &to_remove {
+            timers.0.remove(modifier);
+        }
+    }
+
     pub fn get_modifier_values(&self) -> ModifierValues {
         let mut modifier_values = ModifierValues {
             adds: HashMap::new(),
@@ -96,9 +130,9 @@ impl CreatureModifiers {
         };
 
         for modifier in &self.0 {
-            let is_base = modifier.def.default_modifier;
+            let is_base = modifier.definition().default_modifier;
 
-            for change in modifier.def.changes {
+            for change in modifier.definition().changes {
                 let target: &StatTarget = &change.target;
 
                 match change.kind {

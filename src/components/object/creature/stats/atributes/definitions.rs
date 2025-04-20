@@ -1,7 +1,7 @@
 use strum_macros::EnumIter;
 
 use crate::components::object::creature::stats::{
-    base::CreatureBaseStats,
+    base::{BaseStatType, CreatureBaseStats},
     modifiers::{ModifierValues, StatTarget},
 };
 
@@ -37,14 +37,26 @@ impl AttributeType {
         }
     }
 
+    fn weights(&self) -> Option<&'static [(BaseStatType, f32)]> {
+        match self {
+            AttributeType::WalkSpeed => Some(&[
+                (BaseStatType::Endurance, 0.8),
+                (BaseStatType::Strength, 0.2),
+            ]),
+            AttributeType::SprintSpeed => Some(&[
+                (BaseStatType::Endurance, 0.3),
+                (BaseStatType::Strength, 0.7),
+            ]),
+            _ => None,
+        }
+    }
+
     pub fn resolve(self, base: &CreatureBaseStats, mods: &ModifierValues) -> AttributeValue {
         // Cada caso llama a tu lógica específica,
         // aquí un par de ejemplos sencillos:
-        let formula_value = match self {
-            AttributeType::WalkSpeed => base.strength.total_value * 0.1 + base.endurance.total_value * 0.2,
-            AttributeType::SprintSpeed => base.strength.total_value * 0.2 + base.endurance.total_value * 0.1,
-            _ => 0.0,
-        };
+        let weight_value = self
+            .weights()
+            .map_or(0.0, |weights| base.weighted_sum(weights));
 
         let mut default_value = 0.0_f32;
         let mut non_default_value = 0.0_f32;
@@ -62,6 +74,6 @@ impl AttributeType {
             denied = true;
         }
 
-        AttributeValue::new(default_value, non_default_value, formula_value, denied)
+        AttributeValue::new(default_value, non_default_value, weight_value, denied)
     }
 }

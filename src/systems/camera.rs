@@ -79,10 +79,5 @@ pub fn manual_camera_move(
         transform.translation.x = grid_frac_pos.x;
         transform.translation.z = grid_frac_pos.y;
         transform.translation.y = grid_height_offset.get_offset();
-
-        println!(
-            "Cam pos (grid): ({}, {})  ({})",
-            grid_frac_pos.x, grid_frac_pos.y, transform.rotation
-        );
     }
 }
