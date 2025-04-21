@@ -2,7 +2,11 @@ use bevy::prelude::*;
 
 use crate::components::{
     camera::CameraComponent,
-    grid::{GRID_SIZE, grid_height_offset::GridHeigthOffset, grid_position::GridPositionComponent},
+    grid::{
+        GRID_SIZE,
+        grid_height_offset::GridHeigthOffset,
+        grid_position::{GridPosition, GridPositionComponent},
+    },
 };
 
 pub fn setup_camera(mut commands: Commands) {
@@ -20,7 +24,7 @@ pub fn setup_camera(mut commands: Commands) {
                 0.0,                   // z
                 f32::sqrt(2.0) / 2.0,  // w
             )),
-        GridPositionComponent::new(0, 0),
+        GridPositionComponent::new(GridPosition::new(0, 0)),
         GridHeigthOffset::new(Some(18.0)),
     ));
 }
@@ -60,18 +64,9 @@ pub fn manual_camera_move(
         if dir != Vec2::ZERO {
             dir = dir.normalize();
             // Movemos la cámara usando el método encapsulado
-            grid_pos_component.move_in_grid(dir, camera.camera_speed, delta_s);
+            grid_pos_component
+                .cell_pos
+                .move_in_grid(dir, camera.camera_speed, delta_s);
         }
-
-        // Actualizamos la rotación de la cámara
-        if input.pressed(KeyCode::ArrowRight) {
-            transform.rotate_y(-45f32.to_radians() * delta_s);
-        }
-        if input.pressed(KeyCode::ArrowLeft) {
-            transform.rotate_y(45f32.to_radians() * delta_s);
-        }
-
-        // Actualizamos la posición de la cámara
-        transform.translation = grid_pos_component.to_transform_translation(&grid_height_offset);
     }
 }

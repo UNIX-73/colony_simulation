@@ -5,9 +5,22 @@ use crate::components::grid::{
 };
 
 pub fn set_grid_transforms(
-    mut query: Query<(&mut Transform, &GridPositionComponent, &GridHeigthOffset)>,
+    mut query: Query<
+        (
+            &mut Transform,
+            &mut GridPositionComponent,
+            &mut GridHeigthOffset,
+        ),
+        (Changed<GridPositionComponent>,),
+    >,
 ) {
     for (mut transform, grid_pos_component, height_offset) in &mut query {
-        transform.translation = grid_pos_component.to_transform_translation(height_offset);
+        let mut new_translation = grid_pos_component
+            .cell_pos
+            .to_transform_translation(&height_offset);
+
+        // Conversión de z porque si no el axis visual del grid(y) no corresponde con el visual
+        new_translation.z = -new_translation.z;
+        transform.translation = new_translation;
     }
 }

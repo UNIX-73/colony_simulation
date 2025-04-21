@@ -3,10 +3,15 @@ use std::fmt;
 
 use super::{GRID_FLOOR_HEIGHT, GRID_SIZE, grid_height_offset::GridHeigthOffset};
 
-#[derive(Default)]
+#[derive(Default, Clone, Copy)]
 pub struct GridPosition {
     pub x: i32,
     pub y: i32,
+}
+impl GridPosition {
+    pub fn new(x: i32, y: i32) -> Self {
+        Self { x, y }
+    }
 }
 impl fmt::Display for GridPosition {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -14,12 +19,16 @@ impl fmt::Display for GridPosition {
     }
 }
 
-#[derive(Default)]
+#[derive(Default, Clone, Copy)]
 pub struct FractionalGridPosition {
     pub x: f32, // de -0.5 a 0.5
     pub y: f32, // de -0.5 a 0.5
 }
 impl FractionalGridPosition {
+    pub fn new(x: f32, y: f32) -> Self {
+        Self { x, y }
+    }
+
     pub fn clamp(&mut self) {
         self.x = self.x.clamp(-0.5, 0.5);
         self.y = self.y.clamp(-0.5, 0.5);
@@ -31,24 +40,50 @@ impl FractionalGridPosition {
     }
 }
 
-#[derive(Component, Default)]
-#[require(Transform, GridHeigthOffset)]
-pub struct GridPositionComponent {
+#[derive(Default, Clone)]
+pub struct GridCellPosition {
     pub position: GridPosition,
     pub fractional: FractionalGridPosition,
 }
-impl GridPositionComponent {
-    pub fn new(x: i32, y: i32) -> Self {
+impl GridCellPosition {
+    pub fn new(position: GridPosition) -> Self {
         Self {
-            position: GridPosition { x, y },
-            fractional: FractionalGridPosition::default(),
+            position,
+            fractional: default(),
         }
     }
 
-    pub fn new_with_fractional(x: i32, y: i32, f_x: f32, f_y: f32) -> Self {
+    pub fn new_with_fractional(position: GridPosition, fractional: FractionalGridPosition) -> Self {
         Self {
-            position: GridPosition { x, y },
-            fractional: FractionalGridPosition { x: f_x, y: f_y },
+            position,
+            fractional,
+        }
+    }
+
+    pub fn set_absolute(&mut self, x: i32, y: i32) {
+        self.fractional = default();
+        self.position.x = x;
+        self.position.y = y;
+    }
+
+    pub fn set(&mut self, new_pos: GridCellPosition) {
+        self.position = new_pos.position;
+        self.fractional = new_pos.fractional;
+    }
+
+    pub fn set_by_components(
+        &mut self,
+        new_pos: GridPosition,
+        new_fractional: FractionalGridPosition,
+    ) {
+        self.position = new_pos;
+        self.fractional = new_fractional;
+    }
+
+    pub fn get_decimal_position(&self) -> Vec2 {
+        Vec2 {
+            x: self.position.x as f32 + self.fractional.x,
+            y: self.position.y as f32 + self.fractional.y,
         }
     }
 
@@ -61,8 +96,6 @@ impl GridPositionComponent {
             z: base_z + self.fractional.y * GRID_SIZE,
         }
     }
-
-    // Método para mover la posición en la cuadrícula
     pub fn move_in_grid(&mut self, dir: Vec2, speed: f32, delta_time: f32) {
         self.fractional.apply_direction(dir, speed, delta_time);
 
@@ -81,6 +114,19 @@ impl GridPositionComponent {
         } else if self.fractional.y < -0.5 {
             self.fractional.y += 1.0;
             self.position.y -= 1;
+        }
+    }
+}
+
+#[derive(Component, Default)]
+#[require(Transform, GridHeigthOffset)]
+pub struct GridPositionComponent {
+    pub cell_pos: GridCellPosition,
+}
+impl GridPositionComponent {
+    pub fn new(position: GridPosition) -> Self {
+        Self {
+            cell_pos: GridCellPosition::new(position),
         }
     }
 }
