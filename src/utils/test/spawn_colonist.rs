@@ -3,9 +3,7 @@ use bevy::prelude::*;
 use crate::components::{
     grid::{
         grid_height_offset::GridHeigthOffset,
-        grid_position::{
-            FractionalGridPosition, GridCellPosition, GridPosition, GridPositionComponent,
-        },
+        grid_position::{GridCellPosition, GridPosition, GridPositionComponent},
         movement::GridMovementComponent,
     },
     object::creature::{
@@ -31,7 +29,7 @@ pub fn spawn_testing_colonist(
         },
         GridPositionComponent::new(GridPosition::new(0, 0)),
         GridMovementComponent::new_with_fractional(
-            1000.0,
+            2.0,
             GridCellPosition::new(GridPosition::new(20, 20)),
         ),
         GridHeigthOffset::new(Some(1.0)),
