@@ -23,6 +23,7 @@ pub fn setup_lights(mut commands: Commands) {
             shadows_enabled: false,
             shadow_depth_bias: 0.0,
             shadow_normal_bias: 0.0,
+            affects_lightmapped_mesh_diffuse: true,
         },
         Transform::from_xyz(0.0, 100.0, 0.0).looking_at(Vec3::ZERO, -Vec3::Y),
     ));
