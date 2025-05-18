@@ -8,6 +8,7 @@ bevy = { version = "0.16.0", features = ["dynamic_linking"] }
 bitflags = "2.9.0"
 enum-map = "2.7.3"
 once_cell = "1.21.3"
+rand = "0.9.1"
 strum = "0.27.1"
 strum_macros = "0.27.1"
 	

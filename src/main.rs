@@ -7,8 +7,7 @@ mod utils;
 
 use bevy::prelude::*;
 use plugins::{
-    camera::CameraPlugin, creature::stats::CreatureStatsPlugin, grid::GridPlugin,
-    scene::ScenePlugin,
+    camera::CameraPlugin, chunks::ChunksPlugin, creature::stats::CreatureStatsPlugin, grid::GridPlugin, scene::ScenePlugin
 };
 use utils::test::TestingPlugin;
 
@@ -16,6 +15,7 @@ fn main() {
     let mut app = App::new();
     app.add_plugins((
         DefaultPlugins,
+        ChunksPlugin,
         ScenePlugin,
         CameraPlugin,
         GridPlugin,

@@ -52,8 +52,6 @@ impl AttributeType {
     }
 
     pub fn resolve(self, base: &CreatureBaseStats, mods: &ModifierValues) -> AttributeValue {
-        // Cada caso llama a tu lógica específica,
-        // aquí un par de ejemplos sencillos:
         let weight_value = self
             .weights()
             .map_or(0.0, |weights| base.weighted_sum(weights));
@@ -66,10 +64,12 @@ impl AttributeType {
             default_value += adds.default_values.unwrap_or(0.0);
             non_default_value += adds.non_default_values.unwrap_or(0.0);
         }
+
         if let Some(muls) = mods.muls.get(&StatTarget::Derived(self)) {
             default_value *= muls.default_values.map_or(1.0, |m| 1.0 + m);
             non_default_value *= muls.non_default_values.map_or(1.0, |m| 1.0 + m);
         }
+
         if mods.denies.contains(&StatTarget::Derived(self)) {
             denied = true;
         }
