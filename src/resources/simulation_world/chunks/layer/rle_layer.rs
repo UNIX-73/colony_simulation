@@ -55,13 +55,15 @@ impl<T: CellData> ChunkLayerStorage<T> for RleChunkLayer<T> {
             )
         }
 
-        std::array::from_fn(|i| unsafe { raw[i].assume_init_read() })
+        ChunkData::new(std::array::from_fn(|i| unsafe {
+            raw[i].assume_init_read()
+        }))
     }
 
     fn from_unzip(unzip: ChunkData<T>) -> Self {
         let mut data: Vec<RleRun<T>> = Vec::new();
 
-        let mut iter = unzip.into_iter();
+        let mut iter = unzip.get().into_iter();
         let mut last_cell = iter.next().unwrap(); // asumimos que CHUNK_AREA > 0
         let mut count = 1;
 
@@ -70,7 +72,7 @@ impl<T: CellData> ChunkLayerStorage<T> for RleChunkLayer<T> {
                 count += 1;
             } else {
                 data.push(RleRun {
-                    id: last_cell,
+                    id: last_cell.clone(),
                     count,
                 });
                 last_cell = cell;
@@ -79,7 +81,7 @@ impl<T: CellData> ChunkLayerStorage<T> for RleChunkLayer<T> {
         }
 
         data.push(RleRun {
-            id: last_cell,
+            id: last_cell.clone(),
             count,
         });
 

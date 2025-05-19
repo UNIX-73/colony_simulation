@@ -1,15 +1,14 @@
+pub mod chunk_data;
 pub mod rle_layer;
 
 use crate::utils::memory_size::MemorySize;
 
-use super::CHUNK_AREA;
 use bevy::platform::collections::HashMap;
+use chunk_data::ChunkData;
 use std::marker::PhantomData;
 
 pub trait CellData: Clone + PartialEq + Default {}
 impl<T: Clone + PartialEq + Default> CellData for T {}
-
-pub type ChunkData<T: CellData> = [T; CHUNK_AREA];
 
 pub trait ChunkLayerStorage<T: CellData> {
     /// Devuelve el valor en una posición específica, si existe.

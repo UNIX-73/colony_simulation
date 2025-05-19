@@ -1,4 +1,4 @@
-use layer::{ChunkData, ChunkPos, WorldLayerChunks, rle_layer::RleChunkLayer};
+use layer::{ChunkPos, WorldLayerChunks, chunk_data::ChunkData, rle_layer::RleChunkLayer};
 
 use crate::utils::memory_size::MemorySize;
 
@@ -26,15 +26,15 @@ impl WorldChunks {
         let mut surface_layer =
             WorldLayerChunks::<SurfaceBlock, RleChunkLayer<SurfaceBlock>>::new();
 
-        let mut unzip: ChunkData<SurfaceBlock> = [SurfaceBlock::Air; CHUNK_AREA];
+        let mut chunk_data: ChunkData<SurfaceBlock> = ChunkData::new([SurfaceBlock::Air; CHUNK_AREA]);
 
-        for cell in unzip.iter_mut() {
+        for cell in chunk_data.get_mut().iter_mut() {
             *cell = SurfaceBlock::new_random();
         }
 
         for y in -half_size..half_size {
             for x in -half_size..half_size {
-                surface_layer.set_chunk(ChunkPos::new(x, y), unzip);
+                surface_layer.set_chunk(ChunkPos::new(x, y), chunk_data.clone());
             }
         }
 

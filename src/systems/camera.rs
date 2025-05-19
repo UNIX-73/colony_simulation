@@ -43,7 +43,7 @@ pub fn manual_camera_move(
     >,
 ) {
     if let Ok((camera, mut grid_pos_component, grid_height_offset, mut transform)) =
-        query.get_single_mut()
+        query.single_mut()
     {
         let mut dir = Vec2::ZERO;
         let delta_s = time.delta_secs();
