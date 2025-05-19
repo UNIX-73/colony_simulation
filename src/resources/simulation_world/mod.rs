@@ -1,47 +1,35 @@
 use bevy::ecs::resource::Resource;
-use rand::prelude::*;
-use std::collections::HashMap;
-
-use chunks::{WorldChunk, layer::ChunkLayer};
-use surface::SurfaceBlock;
+use chunks::{WorldChunks, layer::ChunkPos};
 
 pub mod chunks;
 pub mod surface;
 
-pub const WORLD_SIZE: usize = 128;
-pub const WORLD_AREA: usize = WORLD_SIZE.pow(2);
-
-#[derive(Hash, PartialEq, Eq, Debug, Clone, Copy)]
-pub struct ChunkPos(pub i32, pub i32);
+///Width cargado de chunks al rededor de la camara, tiene que ser  impar para tener en cuenta el propio chunk de la camara
+pub const SURROUNDING_AREA_WIDTH: usize = 3;
 
 #[derive(Resource)]
-pub struct WorldChunks(pub HashMap<ChunkPos, WorldChunk>);
+pub struct WorldChunksManager {
+    pub chunks: WorldChunks,
+    pub rendered: [ChunkPos; SURROUNDING_AREA_WIDTH * SURROUNDING_AREA_WIDTH],
+}
+impl WorldChunksManager {
+    pub fn new_testing(world_size: u16) -> Self {
+        let mut starting_chunks =
+            [ChunkPos::new(0, 0); SURROUNDING_AREA_WIDTH * SURROUNDING_AREA_WIDTH];
+        let half_area = (SURROUNDING_AREA_WIDTH / 2) as i32;
 
-impl WorldChunks {
-    pub fn generate_test_world() -> Self {
-        let mut loaded = HashMap::new();
-        let mut rng = rand::rng();
-
-        for cx in -2..=2 {
-            for cz in -2..=2 {
-                let surface_layer =
-                    ChunkLayer::new_with_fn(|_x, _y| match rng.random_range(0..4) {
-                        0 => SurfaceBlock::Dirt,
-                        1 => SurfaceBlock::Granite,
-                        2 => SurfaceBlock::Water,
-                        _ => SurfaceBlock::Air,
-                    })
-                    .zip();
-
-                let chunk = WorldChunk {
-                    surface_layer,
-                    // Añade otras capas aquí si las tienes
-                };
-
-                loaded.insert(ChunkPos(cx, cz), chunk);
+        let mut i = 0;
+        //+1 para añadir el chunk central
+        for y in -half_area..half_area + 1 {
+            for x in -half_area..half_area + 1 {
+                starting_chunks[i] = ChunkPos::new(x, y);
+                i += 1;
             }
         }
 
-        WorldChunks(loaded)
+        Self {
+            chunks: WorldChunks::generate_test_world(world_size),
+            rendered: starting_chunks,
+        }
     }
 }

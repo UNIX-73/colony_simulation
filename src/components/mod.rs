@@ -1,4 +1,5 @@
 pub mod camera;
-pub mod object;
 pub mod grid;
+pub mod object;
+pub mod render;
 pub mod scene;

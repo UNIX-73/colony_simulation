@@ -1,6 +1,8 @@
 use bevy::prelude::*;
 use std::fmt;
 
+use crate::resources::simulation_world::chunks::{layer::ChunkPos, CHUNK_SIZE};
+
 use super::{GRID_FLOOR_HEIGHT, GRID_SIZE, grid_height_offset::GridHeigthOffset};
 
 #[derive(Default, Clone, Copy)]
@@ -115,6 +117,13 @@ impl GridCellPosition {
             self.fractional.y += 1.0;
             self.position.y -= 1;
         }
+    }
+
+    pub fn get_chunk_pos(&self) -> ChunkPos {
+        ChunkPos::new(
+            self.position.x / CHUNK_SIZE as i32,
+            self.position.y / CHUNK_SIZE as i32,
+        )
     }
 }
 

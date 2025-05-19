@@ -5,9 +5,10 @@ mod resources;
 mod systems;
 mod utils;
 
-use bevy::prelude::*;
+use bevy::{prelude::*};
 use plugins::{
-    camera::CameraPlugin, chunks::ChunksPlugin, creature::stats::CreatureStatsPlugin, grid::GridPlugin, scene::ScenePlugin
+    camera::CameraPlugin, chunks::ChunksPlugin, creature::stats::CreatureStatsPlugin,
+    grid::GridPlugin, render::RenderPlugin, scene::ScenePlugin,
 };
 use utils::test::TestingPlugin;
 
@@ -21,6 +22,7 @@ fn main() {
         GridPlugin,
         TestingPlugin,
         CreatureStatsPlugin,
+        RenderPlugin,
     ));
 
     app.run();
