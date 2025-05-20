@@ -3,7 +3,6 @@ use bevy::prelude::*;
 use crate::components::{
     camera::CameraComponent,
     grid::{
-        GRID_SIZE,
         grid_height_offset::GridHeigthOffset,
         grid_position::{GridPosition, GridPositionComponent},
     },
@@ -11,7 +10,7 @@ use crate::components::{
 
 pub fn setup_camera(mut commands: Commands) {
     commands.spawn((
-        CameraComponent { camera_speed: 50.0 },
+        CameraComponent { camera_speed: 25.0 },
         Camera3d::default(),
         // 1) Posicionar la cámara arriba
         // 2) Apuntar el forward local (−Z) hacia abajo (−Y)

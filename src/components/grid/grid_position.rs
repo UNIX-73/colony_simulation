@@ -11,8 +11,7 @@ use crate::{
 
 use super::{GRID_FLOOR_HEIGHT, GRID_SIZE, grid_height_offset::GridHeigthOffset};
 
-#[derive(Default, Clone, Copy)]
-
+#[derive(Default, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct GridPosition {
     pub x: i32,
     pub y: i32,

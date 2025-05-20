@@ -1,25 +1,26 @@
-use bevy::ecs::resource::Resource;
-use chunks::{WorldChunks, layer::ChunkPos};
+use std::collections::HashSet;
 
-use crate::components::grid::grid_position::{GridCellPosition, GridPosition};
+use bevy::ecs::resource::Resource;
+use chunks::WorldChunks;
+
+use crate::components::grid::grid_position::GridPosition;
 
 pub mod chunks;
 pub mod surface;
 
-///Width cargado de cells al rededor de la camara
-pub const SURROUNDING_AREA_WIDTH: usize = 3;
-pub const SURROUNDING_AREA: usize = SURROUNDING_AREA_WIDTH.pow(2);
+///Width cargado de cells al rededor de la camara, TIENE QUE SER IMPAR
+pub const RENDER_WIDTH: usize = 31;
 
 #[derive(Resource)]
 pub struct WorldChunksManager {
     pub chunks: WorldChunks,
-    pub rendered: [Option<GridPosition>; SURROUNDING_AREA],
+    pub rendered: HashSet<GridPosition>,
 }
 impl WorldChunksManager {
     pub fn new_testing(world_size: u16) -> Self {
         Self {
             chunks: WorldChunks::generate_test_world(world_size),
-            rendered: [None; SURROUNDING_AREA],
+            rendered: HashSet::new(),
         }
     }
 }
