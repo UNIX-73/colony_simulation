@@ -17,6 +17,15 @@ impl SurfaceBlock {
 
         unsafe { std::mem::transmute(index as u16) }
     }
+
+    pub fn get_block_color(&self) -> Option<(u8, u8, u8)> {
+        match self {
+            SurfaceBlock::Air => None,
+            SurfaceBlock::Water => Some((51, 204, 255)),
+            SurfaceBlock::Dirt => Some((153, 102, 51)),
+            SurfaceBlock::Granite => Some((153, 153, 102)),
+        }
+    }
 }
 impl Default for SurfaceBlock {
     fn default() -> Self {

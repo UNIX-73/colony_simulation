@@ -11,7 +11,7 @@ use crate::components::{
 
 pub fn setup_camera(mut commands: Commands) {
     commands.spawn((
-        CameraComponent { camera_speed: 10.0 },
+        CameraComponent { camera_speed: 50.0 },
         Camera3d::default(),
         // 1) Posicionar la cámara arriba
         // 2) Apuntar el forward local (−Z) hacia abajo (−Y)

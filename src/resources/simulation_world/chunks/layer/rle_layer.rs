@@ -1,4 +1,4 @@
-use super::{CellData, ChunkData, ChunkLayerStorage};
+use super::{CellData, ChunkData, ChunkLayerStorage, chunk_data::ChunkCellPos};
 use crate::{
     resources::simulation_world::chunks::{CHUNK_AREA, CHUNK_SIZE},
     utils::memory_size::MemorySize,
@@ -18,6 +18,10 @@ impl<T: CellData> ChunkLayerStorage<T> for RleChunkLayer<T> {
         self.get_index(y * CHUNK_SIZE + x)
     }
 
+    fn get_pos(&self, pos: ChunkCellPos) -> Option<T> {
+        self.get_index(pos.idx)
+    }
+    
     /// Es ineficiente ya que recorre todos los vec hasta encontrar el correcto
     fn get_index(&self, idx: usize) -> Option<T> {
         if idx >= CHUNK_AREA {

@@ -8,12 +8,11 @@ use crate::{
             grid_position::{GridPosition, GridPositionComponent},
         },
         render::surface::SurfaceComponent,
-        scene::SceneComponent,
     },
     resources::simulation_world::{
         SURROUNDING_AREA_WIDTH, WorldChunksManager,
         chunks::{
-            CHUNK_AREA, WorldChunks,
+            CHUNK_AREA, CHUNK_SIZE,
             layer::{
                 ChunkLayerStorage, ChunkPos,
                 chunk_data::{ChunkCellPos, ChunkData},
@@ -26,71 +25,85 @@ use crate::{
 
 pub fn render_surface(
     camera_query: Query<&GridPositionComponent, With<CameraComponent>>,
-    blocks_query: Query<
-        (Entity, &GridPositionComponent, &GridHeigthOffset),
-        With<SurfaceComponent>,
-    >,
+    blocks_query: Query<(Entity, &GridPositionComponent), With<SurfaceComponent>>,
     mut world_chunks: ResMut<WorldChunksManager>,
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    debug_assert!(SURROUNDING_AREA_WIDTH % 2 != 0);
-
-    let camera_position: &GridPositionComponent;
-    if let Ok(camera) = camera_query.single() {
-        camera_position = camera;
+    // Obtener posición de la cámara
+    let camera_pos_comp = if let Ok(cam) = camera_query.single() {
+        cam
     } else {
-        println!("No camera found");
+        eprintln!("No se encontró la cámara");
         return;
-    }
+    };
+    let cam_global = camera_pos_comp.cell_pos.position;
 
-    let camera_chunk = camera_position.cell_pos.get_chunk_pos();
+    // Área de renderizado centrada en la cámara
+    let half = (SURROUNDING_AREA_WIDTH as isize) / 2;
+    let mut idx = 0;
 
-    let mut surrounding_chunks = [camera_chunk; SURROUNDING_AREA_WIDTH * SURROUNDING_AREA_WIDTH];
+    // Cacheamos en vec en vez de hashmap porque probablemente no haya que cacheas mas de 3 o 4 chunks
+    // pub struct ChunkData<T>([T; CHUNK_AREA])
+    let mut cached_chunks: Vec<(ChunkPos, ChunkData<SurfaceBlock>)> = vec![];
 
-    let half_area = (SURROUNDING_AREA_WIDTH / 2) as i32;
+    for dy in -half..=half {
+        for dx in -half..=half {
+            let x = cam_global.x + dx as i32;
+            let y = cam_global.y + dy as i32;
+            let cell_pos = GridPosition::new(x, y).get_chunk_cell_pos();
+            let chunk_pos = GridPosition::new(x, y).get_chunk_pos();
 
-    let mut i = 0;
-    //+1 para añadir el chunk central
-    for y in -half_area..half_area + 1 {
-        for x in -half_area..half_area + 1 {
-            surrounding_chunks[i] = ChunkPos::new(x + camera_chunk.x(), y + camera_chunk.y());
-            i += 1;
-        }
-    }
-
-    for row in 0..SURROUNDING_AREA_WIDTH {
-        let start = row * SURROUNDING_AREA_WIDTH;
-        let end = start + SURROUNDING_AREA_WIDTH;
-        let row_slice = &surrounding_chunks[start..end];
-        println!("{:?}", row_slice);
-    }
-
-    for chunk_pos in surrounding_chunks {
-        if !world_chunks.rendered.contains(&Some(chunk_pos)) {
-            let default_chunk =
-                &RleChunkLayer::from_unzip(ChunkData::new([SurfaceBlock::Air; CHUNK_AREA]));
-
-            let chunk = world_chunks
-                .chunks
-                .surface_layer
-                .get_chunk(chunk_pos)
-                .unwrap_or(default_chunk);
-
-            for (idx, cell) in chunk.iter() {
-                let pos = ChunkCellPos::from_idx(idx);
-
-                commands.spawn((
-                    GridPositionComponent::new(pos.as_grid_position()),
-                    GridHeigthOffset::new(Some(1.0)),
-                    Mesh3d(meshes.add(Cuboid::new(1.0, 1.0, 1.0))),
-                    MeshMaterial3d(materials.add(Color::srgb_u8(255, 255, 0))),
-                    Transform::from_xyz(0.0, 2.0, 0.0),
-                ));
+            // Saltar si ya está renderizado
+            if let Some(prev) = world_chunks.rendered[idx] {
+                if prev.x == x && prev.y == y {
+                    idx += 1;
+                    continue;
+                }
+                // Si cambió, eliminar la entidad anterior
+                if let Some((entity, _)) = blocks_query.iter().nth(idx) {
+                    println!("despawned {}", entity);
+                    commands.entity(entity).despawn();
+                }
             }
+
+            let block: SurfaceBlock;
+            let cached_chunk = cached_chunks.iter().find(|ch| ch.0 == chunk_pos);
+
+            if let Some((_, layer)) = cached_chunk {
+                block = layer.get_pos(cell_pos).clone();
+            } else {
+                // No está en caché, cargar el chunk a caché
+                let requested_chunk = world_chunks.chunks.surface_layer.get_chunk(chunk_pos);
+                if let Some(chunk) = requested_chunk {
+                    let unzip_data = chunk.unzip();
+
+                    block = *unzip_data.get_pos(cell_pos);
+
+                    let _ = cached_chunks.push((chunk_pos, unzip_data));
+                } else {
+                    //TODO: gestión de carga de chunks
+                    continue;
+                }
+            }
+
+            let mut color = (255, 255, 255);
+            if let Some(block_color) = block.get_block_color() {
+                color = block_color;
+            }
+
+            commands.spawn((
+                GridPositionComponent::new(GridPosition::new_from_chunk_pos(chunk_pos, cell_pos)),
+                GridHeigthOffset::new(Some(1.0)),
+                Mesh3d(meshes.add(Cuboid::new(1.0, 1.0, 1.0))),
+                MeshMaterial3d(materials.add(Color::srgb_u8(color.0, color.1, color.2))),
+                Transform::default(), // Se ajusta en otro sistema del GridPositionComponent
+            ));
+
+            // Registrar posición para no rerender
+            world_chunks.rendered[idx] = Some(GridPosition::new(x, y));
+            idx += 1;
         }
     }
-
-    world_chunks.rendered = surrounding_chunks.map(|c| Some(c));
 }

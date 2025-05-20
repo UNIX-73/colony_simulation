@@ -1,23 +1,47 @@
 use bevy::prelude::*;
 use std::fmt;
 
-use crate::resources::simulation_world::chunks::{layer::ChunkPos, CHUNK_SIZE};
+use crate::{
+    resources::simulation_world::chunks::{
+        CHUNK_SIZE,
+        layer::{ChunkPos, chunk_data::ChunkCellPos},
+    },
+    utils::math::{div_floor, mod_floor},
+};
 
 use super::{GRID_FLOOR_HEIGHT, GRID_SIZE, grid_height_offset::GridHeigthOffset};
 
 #[derive(Default, Clone, Copy)]
+
 pub struct GridPosition {
     pub x: i32,
     pub y: i32,
 }
+
 impl GridPosition {
     pub fn new(x: i32, y: i32) -> Self {
         Self { x, y }
     }
-}
-impl fmt::Display for GridPosition {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "({}, {})", self.x, self.y)
+
+    pub fn new_from_chunk_pos(chunk: ChunkPos, cell: ChunkCellPos) -> Self {
+        let x = chunk.x * CHUNK_SIZE as i32 + cell.x() as i32;
+        let y = chunk.y * CHUNK_SIZE as i32 + cell.y() as i32;
+        GridPosition { x, y }
+    }
+
+    /// Devuelve la posición del chunk al que pertenece esta celda
+    pub fn get_chunk_pos(&self) -> ChunkPos {
+        ChunkPos::new(
+            div_floor(self.x, CHUNK_SIZE as i32),
+            div_floor(self.y, CHUNK_SIZE as i32),
+        )
+    }
+
+    /// Devuelve la posición interna en el chunk de esta celda
+    pub fn get_chunk_cell_pos(&self) -> ChunkCellPos {
+        let local_x = mod_floor(self.x, CHUNK_SIZE as i32) as usize;
+        let local_y = mod_floor(self.y, CHUNK_SIZE as i32) as usize;
+        ChunkCellPos::from_xy(local_x as u32, local_y as u32)
     }
 }
 
@@ -117,13 +141,6 @@ impl GridCellPosition {
             self.fractional.y += 1.0;
             self.position.y -= 1;
         }
-    }
-
-    pub fn get_chunk_pos(&self) -> ChunkPos {
-        ChunkPos::new(
-            self.position.x / CHUNK_SIZE as i32,
-            self.position.y / CHUNK_SIZE as i32,
-        )
     }
 }
 

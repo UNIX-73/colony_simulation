@@ -4,7 +4,8 @@ pub mod rle_layer;
 use crate::utils::memory_size::MemorySize;
 
 use bevy::platform::collections::HashMap;
-use chunk_data::ChunkData;
+use chunk_data::{ChunkCellPos, ChunkData};
+use rand::seq;
 use std::marker::PhantomData;
 
 pub trait CellData: Clone + PartialEq + Default {}
@@ -13,6 +14,8 @@ impl<T: Clone + PartialEq + Default> CellData for T {}
 pub trait ChunkLayerStorage<T: CellData> {
     /// Devuelve el valor en una posición específica, si existe.
     fn get(&self, x: usize, y: usize) -> Option<T>;
+
+    fn get_pos(&self, pos: ChunkCellPos) -> Option<T>;
 
     /// Devuelve el valor en índice lineal (0..CHUNK_AREA).
     fn get_index(&self, idx: usize) -> Option<T>;
@@ -32,18 +35,13 @@ pub trait ChunkLayerStorage<T: CellData> {
 }
 
 #[derive(Hash, Eq, PartialEq, Clone, Copy, Debug)]
-pub struct ChunkPos(i32, i32);
+pub struct ChunkPos {
+    pub x: i32,
+    pub y: i32,
+}
 impl ChunkPos {
     pub fn new(x: i32, y: i32) -> ChunkPos {
-        ChunkPos(x, y)
-    }
-
-    pub fn x(&self) -> i32 {
-        self.0
-    }
-
-    pub fn y(&self) -> i32 {
-        self.1
+        ChunkPos { x, y }
     }
 }
 
